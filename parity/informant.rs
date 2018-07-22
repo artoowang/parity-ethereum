@@ -366,9 +366,18 @@ impl ChainNotify for Informant<FullNodeInformantData> {
 				let header_view = block.header_view();
 				let size = block.rlp().as_raw().len();
 				let (skipped, skipped_txs) = (self.skipped.load(AtomicOrdering::Relaxed) + imported.len() - 1, self.skipped_txs.load(AtomicOrdering::Relaxed) + txs_imported);
-				info!(target: "import", "Imported {} {} ({} txs, {} Mgas, {} ms, {} KiB){}",
+
+                use std::time::{SystemTime, UNIX_EPOCH};
+                let start = SystemTime::now();
+                let since_the_epoch = start.duration_since(UNIX_EPOCH)
+                    .expect("Time went backwards");
+                println!("{:?}", since_the_epoch);
+                println!("Block delay {} {} {} {}", since_the_epoch.as_secs() - header_view.timestamp(), header_view.number(), since_the_epoch.as_secs(), header_view.timestamp());
+
+				info!(target: "import", "Imported {} {} {} ({} txs, {} Mgas, {} ms, {} KiB){}",
 					Colour::White.bold().paint(format!("#{}", header_view.number())),
 					Colour::White.bold().paint(format!("{}", header_view.hash())),
+					Colour::White.bold().paint(format!("{}", header_view.timestamp())),
 					Colour::Yellow.bold().paint(format!("{}", block.transactions_count())),
 					Colour::Yellow.bold().paint(format!("{:.2}", header_view.gas_used().low_u64() as f32 / 1000000f32)),
 					Colour::Purple.bold().paint(format!("{:.2}", duration as f32 / 1000000f32)),
